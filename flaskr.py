@@ -40,9 +40,6 @@ def teardown_request(exception):
 
 #tutorial step 5
 
-@app.route('/')
-def hello_world():
-    return 'Hello World!'
 def show_entries():
     cur = g.db.execute('select title, text from entries order by id desc')
     entries = [dict(title=row[0], text=row[1]) for row in cur.fetchall()]
@@ -52,15 +49,12 @@ def show_entries():
 def add_entry():
     if not session.get('logged_in'):
         abort(401)
-    g.db.execute('insert into entries (title, text) values (?, ?)',
-                 [request.form['title'], request.form['text']])
+    g.db.execute('insert into entries (title, text) values (?, ?)',[request.form['title'], request.form['text']])
     g.db.commit()
     flash('New entry was successfully posted')
     return redirect(url_for('show_entries'))
 
-#
-
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET','POST'])
 def login():
     error = None
     if request.method == 'POST':
@@ -70,11 +64,20 @@ def login():
             error = 'Invalid password'
         else:
             session['logged_in'] = True
-            flash('You were logged in')
+            flash("You were logged in")
             return redirect(url_for('show_entries'))
-    return render_template('login.html', error=error)
+    return render_template("login.html", error=error)
+
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    flash('You were logged out')
+    return redirect(url_for('show_entries'))
 
 
+@app.route('/')
+def hello_world():
+    return 'Hello World!'
 
 if __name__ == '__main__':
     app.run()
